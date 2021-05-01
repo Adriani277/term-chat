@@ -1,0 +1,18 @@
+
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - init: sbt compile
+
+vscode:
+  extensions:
+    - scalameta.metals
+    - k--kato.intellij-idea-keybindings
+
+ports:
+  - port: 8212
+  - port: 8080
+
+tasks:
+  - command: zsh
