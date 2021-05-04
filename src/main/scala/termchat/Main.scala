@@ -4,25 +4,21 @@ import zhttp.http._
 import zhttp.service._
 import zhttp.socket._
 import zio._
-import zio.duration._
 import zio.stream.ZStream
-import zhttp.socket.WebSocketFrame.Text
 
 // TODO: Type alias App
 object Main extends App {
   private def socket(
       hub: Hub[(String, WebSocketFrame.Text)],
       name: String
-  ): Socket[Any, SocketError, WebSocketFrame, WebSocketFrame] = {
-    val subscriber = ZStream.fromHub(hub).map { case (user, msg) =>
-      if (user == name)
-        WebSocketFrame.Ping
-      else
-        WebSocketFrame.text(user + ":" + msg.text)
-    }
+  ): Socket[Any, SocketError, WebSocketFrame, WebSocketFrame] =
     Socket.collect[WebSocketFrame] {
       case WebSocketFrame.Text("subscribe\n") =>
-        subscriber
+        for {
+          queue <- ZStream.managed(hub.subscribe)
+          res   <- Subscriber.subscribe(name, queue)
+        } yield res
+
       case fr @ WebSocketFrame.Text(_) =>
         ZStream
           .fromEffect(
@@ -30,11 +26,10 @@ object Main extends App {
           )
           .as(WebSocketFrame.Ping)
     }
-  }
 
   private val app =
     Http.collectM {
-      case Method.GET -> Root / "greet" / name =>
+      case Method.GET -> Root / "greet" / name           =>
         ZIO.succeed(Response.text(s"Greetings {$name}!"))
       case req @ Method.GET -> Root / "subscribe" / name =>
         for {

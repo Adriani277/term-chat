@@ -1,14 +1,18 @@
 import Dependencies._
 
-ThisBuild / scalaVersion := "2.13.4"
+ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "com.term-chat"
 ThisBuild / organizationName := "term-chat"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "term-chat"
+    name := "term-chat",
+    semanticdbEnabled := true,
+    semanticdbVersion := scalafixSemanticdb.revision
   )
+
+ThisBuild / scalafixDependencies += "com.nequissimus" %% "sort-imports" % "0.5.5"
 
 val zioVersion = "1.0.7"
 
